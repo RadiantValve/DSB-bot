@@ -4,7 +4,7 @@ import discord
 import time
 import os
 
-load_dotenv(dotenv_path='dsbMobile/.env')
+load_dotenv(dotenv_path='DSB-bot/.env')
 TOKEN = os.getenv('DISCORD_TOKEN')
 print(TOKEN)
 
