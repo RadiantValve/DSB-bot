@@ -5,6 +5,8 @@ import time
 import os
 
 load_dotenv(dotenv_path='DSB-bot/.env')
+DSB_ID = os.getenv('ID')
+DSB_USER = os.getenv('USERNAME')
 TOKEN = os.getenv('DISCORD_TOKEN')
 print(TOKEN)
 
@@ -42,7 +44,7 @@ async def on_message(message):
     if message.content.startswith("get"):
         file_list = []
         await message.channel.send("ok")
-        extractor = DSBPlanExtractor("358001", "urselS")
+        extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
         extractor.get_all()
 
         for root, dirs, files in os.walk(os.getcwd()):

@@ -175,7 +175,7 @@ class DSBPlanExtractor:
             self.fetch_and_extract(c)
 
 
-#extractor = DSBPlanExtractor("358001", "urselS")
+#extractor = DSBPlanExtractor(exampleID,exampleUSER)
 #all_classes = [51, 52, 53, 61, 62, 63, 71, 72, 73, 81, 82, 83, 91, 92, 93, 101, 102, 103, 11, 12, 13]
 #for c in all_classes:
 #    extractor.fetch_and_extract(c)
