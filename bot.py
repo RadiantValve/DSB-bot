@@ -51,6 +51,7 @@ async def on_message(message):
             for file in files:
                 if file.endswith('.jpg'):
                     file_list.append(file)
+                    await message.channel.send(file=discord.File(f'images/{file}'))
         print(file_list)
     
     else:
