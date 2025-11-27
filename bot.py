@@ -66,6 +66,7 @@ async def on_message(message):
             await message.channel.send("done")
         else:
             await message.channel.send("No images found in the 'images' folder.")
+        return
     
     if message.content.startswith("backup"):
         await message.channel.send("Starting backup...")
