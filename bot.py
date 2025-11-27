@@ -48,15 +48,24 @@ async def on_message(message):
         await message.channel.send("ok")
         extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
         extractor.get_all()
-
-        for root, dirs, files in os.walk(os.getcwd()):
-            for file in files:
-                if file.endswith('.jpg'):
-                    file_list.append(file)
-                    await message.channel.send(file=discord.File(f'images/{file}'))
-                    time.sleep(.4)
+    
+        # Look specifically for images in the 'images' folder
+        images_folder = "images"
+        if not os.path.exists(images_folder):
+            await message.channel.send("The 'images' folder does not exist.")
+            return
+        
+        for file in os.listdir(images_folder):
+            if file.endswith('.jpg'):
+                file_list.append(file)
+                await message.channel.send(file=discord.File(os.path.join(images_folder, file)))
+                time.sleep(.4)
+        
         print(file_list)
-        await message.channel.send("done")
+        if file_list:
+            await message.channel.send("done")
+        else:
+            await message.channel.send("No images found in the 'images' folder.")
     
     if message.content.startswith("backup"):
         await message.channel.send("Starting backup...")
