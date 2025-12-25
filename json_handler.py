@@ -30,6 +30,12 @@ class usr_data:
                 return i['id']
         return None
     
+    def get_user_data(self, username):
+        for i in self.data['users']:
+            if i['name'] == username:
+                return i['send-data']
+        return None
+    
     def get_user_time(self, username):
         for i in self.data['users']:
             if i['name'] == username:

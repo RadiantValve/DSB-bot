@@ -61,14 +61,48 @@ class MyClient(discord.Client):
             print(f'{i}\n{i.member_count}')
             for o in i.members:
                 print(o)
-
-    #send_times = [datetime.time(hour=7, minute=45), datetime.time(hour=9, minute=30)]
-    send_times = 
-    for u in users.get_users_sendinfo():
-        h, m = users.get_user_time(u)
-        send_times.append(datetime.time(hour=h, minute=m))
+    send_times =  []
     
+    def set_send_times(self):
+        #send_times = [datetime.time(hour=7, minute=45), datetime.time(hour=9, minute=30)]
+        self.send_times =  []
+        for u in users.get_users_sendinfo():
+            h, m = users.get_user_time(u)
+            self.send_times.append(datetime.time(hour=h, minute=m))
+    
+    async def send_dsb_img(self, user, data):
+        file_list = []
+        extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
+        extractor.fetch_and_extract(data)
+
+        images_folder = "images"
+        if not os.path.exists(images_folder):
+            return
+        
+        for file in os.listdir(images_folder):
+            if file.endswith('.jpg'):
+                file_list.append(file)
+                await user.send(file=discord.File(os.path.join(images_folder, file)))
+                time.sleep(.4)
+        
+        print(file_list)
+        if file_list:
+            await user.send("done")
+        else:
+            await user.send("No images found in the 'images' folder.")
+    
+    set_send_times()
     @tasks.loop(send_times)
+    async def send_to_users(self):
+        for u in users.get_users_sendinfo():
+            for t in self.send_times:
+                h, m = users.get_user_time(u)
+                if datetime.time(hour=h, minute=m) == self.send_times[t]:
+                    data = users.get_user_data(u)
+                    user = await client.fetch_user(u)
+                    self.send_dsb_img(user, data)
+
+        print(1)
 
     @client.event
     async def on_message(self, message):
