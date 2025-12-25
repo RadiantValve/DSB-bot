@@ -6,7 +6,7 @@ import shutil
 import time
 import os
 
-load_dotenv(dotenv_path='DSB-bot/.env')
+load_dotenv(dotenv_path=f'/.env')
 DSB_ID = os.getenv('ID')
 DSB_USER = os.getenv('USERNAME')
 TOKEN = os.getenv('DISCORD_TOKEN')
