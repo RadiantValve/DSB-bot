@@ -28,6 +28,12 @@ class usr_data:
         for i in self.data['users']:
             if i['name'] == username:
                 return i['id']
+        return None
+    
+    def get_user_time(self, username):
+        for i in self.data['users']:
+            if i['name'] == username:
+                return i['send-time-h'], i['send-time-m']
     
     def add_user(self, name, send_info, send_data, send_h, send_m):
         for u in self.data['users']:
@@ -46,6 +52,12 @@ class usr_data:
         self.data['users'].append(new_user_entry)
         with open('data.json', 'w') as usr_lst:
             json.dump(self.data, usr_lst, indent=4)
+    
+    def del_user(self, username):
+        id = self.get_user_id(username)
+        with open('data.json', 'r+') as json_file:
+            del self.data['users'][id]
+            json.dump(self.data, json_file, indent=4)
       
     def user_known(self, username):
         for usr in self.data['users']:
