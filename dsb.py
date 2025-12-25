@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pydsb import PyDSB
 import imgkit
+import shutil
 import os
 
 class DSBPlanExtractor:
@@ -173,6 +174,26 @@ class DSBPlanExtractor:
         all_classes = [51, 52, 53, 61, 62, 63, 71, 72, 73, 81, 82, 83, 91, 92, 93, 101, 102, 103, 11, 12, 13]#
         for c in all_classes:
             self.fetch_and_extract(c)
+    
+    def backup(self):
+        backup_folder = "backup"
+        if not os.path.exists(backup_folder):
+            os.makedirs(backup_folder)
+        
+        for file in os.listdir("images"):
+            if file.endswith(".jpg"):
+                # Extract the date from the filename (assuming format like 'subst_8b_2025-11-24.jpg')
+                try:
+                    date_str = file.split("_")[-1].split(".")[0]  # Extract '2025-11-24'
+                    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                    date_folder = os.path.join(backup_folder, date_obj.strftime("%Y-%m-%d"))
+                    
+                    if not os.path.exists(date_folder):
+                        os.makedirs(date_folder)
+                    shutil.move(os.path.join("images", file), os.path.join(date_folder, file))
+                except ValueError:
+                    return False
+        return True
 
 
 #extractor = DSBPlanExtractor(exampleID,exampleUSER)

@@ -6,17 +6,17 @@ from datetime import datetime
 import datetime
 import discord
 import logging
-import shutil
 import time
 import os
-
-users = js()
 
 load_dotenv(dotenv_path=f'/.env')
 DSB_ID = os.getenv('ID')
 DSB_USER = os.getenv('USERNAME')
 TOKEN = os.getenv('DISCORD_TOKEN')
 print(TOKEN)
+
+users = js()
+extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
 
 Intents = discord.Intents.default()
 # dm intents
@@ -33,7 +33,6 @@ Intents.members = True
 client = discord.Client(intents=Intents)
 
 def log(message):
-
     logging.basicConfig(
         filename='bot.log',                # Log file name
         level=logging.INFO,                # Log level
@@ -70,10 +69,10 @@ class MyClient(discord.Client):
             h, m = users.get_user_time(u)
             self.send_times.append(datetime.time(hour=h, minute=m))
     
-    async def send_dsb_img(self, user, data):
+    async def send_dsb_img(self, u, data):
         file_list = []
-        extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
         extractor.fetch_and_extract(data)
+        user = await client.fetch_user(u)
 
         images_folder = "images"
         if not os.path.exists(images_folder):
@@ -83,7 +82,6 @@ class MyClient(discord.Client):
             if file.endswith('.jpg'):
                 file_list.append(file)
                 await user.send(file=discord.File(os.path.join(images_folder, file)))
-                time.sleep(.4)
         
         print(file_list)
         if file_list:
@@ -99,8 +97,11 @@ class MyClient(discord.Client):
                 h, m = users.get_user_time(u)
                 if datetime.time(hour=h, minute=m) == self.send_times[t]:
                     data = users.get_user_data(u)
-                    user = await client.fetch_user(u)
-                    self.send_dsb_img(user, data)
+                    self.send_dsb_img(u, data)
+                    if extractor.backup():
+                        print("backup sucessfull")
+                    else:
+                        print("backup failed...")
 
         print(1)
 
@@ -193,32 +194,14 @@ class MyClient(discord.Client):
             return
         
         if message.content == ("backup"):
+            extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
             await message.channel.send("Starting backup...")
+            if extractor.backup():
+                await message.channel.send("Backup completed!")
+            else:
+                await message.cannel.send("Error while moving files...")
             
-            backup_folder = "backup"
-            if not os.path.exists(backup_folder):
-                os.makedirs(backup_folder)
             
-            # Move images to the backup folder, organizing by date
-            for file in os.listdir("images"):
-                if file.endswith(".jpg"):
-                    # Extract the date from the filename (assuming format like 'subst_8b_2025-11-24.jpg')
-                    try:
-                        # Split the filename and extract the date part
-                        date_str = file.split("_")[-1].split(".")[0]  # Extract '2025-11-24'
-                        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-                        date_folder = os.path.join(backup_folder, date_obj.strftime("%Y-%m-%d"))
-                        
-                        # Create the date folder if it doesn't exist
-                        if not os.path.exists(date_folder):
-                            os.makedirs(date_folder)
-                        
-                        # Move the file to the date folder
-                        shutil.move(os.path.join("images", file), os.path.join(date_folder, file))
-                    except ValueError:
-                        await message.channel.send(f"Skipping file with invalid date format: {file}")
-            
-            await message.channel.send("Backup completed!")
         
         all_commands = commands + special_commands
         for c in all_commands:
