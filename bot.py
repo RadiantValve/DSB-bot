@@ -51,6 +51,7 @@ def log(message):
 
 class MyClient(discord.Client):
     logging = True
+    send_times = datetime.time(hour=7, minute=0)
     async def on_ready(self):
         log(f'Logged in as {self.user} (ID: {self.user.id})')
         log('------')
@@ -60,14 +61,15 @@ class MyClient(discord.Client):
             print(f'{i}\n{i.member_count}')
             for o in i.members:
                 print(o)
-    send_times =  []
+        self.set_send_times()
+        await self.send_to_users()
     
     def set_send_times(self):
         #send_times = [datetime.time(hour=7, minute=45), datetime.time(hour=9, minute=30)]
         self.send_times =  []
         for u in users.get_users_sendinfo():
             h, m = users.get_user_time(u)
-            self.send_times.append(datetime.time(hour=h, minute=m))
+            self.send_times.append((h, m))
     
     async def send_dsb_img(self, u, data):
         file_list = []
@@ -89,13 +91,12 @@ class MyClient(discord.Client):
         else:
             await user.send("No images found in the 'images' folder.")
     
-    set_send_times()
-    @tasks.loop(send_times)
+    #set_send_times()
     async def send_to_users(self):
         for u in users.get_users_sendinfo():
             for t in self.send_times:
                 h, m = users.get_user_time(u)
-                if datetime.time(hour=h, minute=m) == self.send_times[t]:
+                if (datetime.time(hour=h) == t[0]) and (datetime.time(minute=m) == t[1]):
                     data = users.get_user_data(u)
                     self.send_dsb_img(u, data)
                     if extractor.backup():
