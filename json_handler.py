@@ -20,9 +20,10 @@ class usr_data:
         return users_return
     
     def get_user_info(self, username):
-        for i in self.data['users']:
-            if i['name'] == username:
-                return i
+        for idx, u in enumerate(self.data['users']):
+            if u['name'] == username:
+                return idx, u
+        return None
     
     def get_user_id(self, username):
         for i in self.data['users']:
@@ -53,17 +54,22 @@ class usr_data:
             "send-info": send_info,
             "send-data": send_data,
             "send-time-h": send_h,
-            "send_time-m": send_m
+            "send-time-m": send_m
         }
         self.data['users'].append(new_user_entry)
         with open('data.json', 'w') as usr_lst:
             json.dump(self.data, usr_lst, indent=4)
     
     def del_user(self, username):
-        id = self.get_user_id(username)
-        with open('data.json', 'r+') as json_file:
-            del self.data['users'][id]
-            json.dump(self.data, json_file, indent=4)
+        for idx, u in enumerate(self.data['users']):
+            if u['name'] == username:
+                with open('data.json', 'r+') as json_file:
+                    del self.data['users'][idx]
+                    json_file.seek(0)
+                    json.dump(self.data, json_file, indent=4)
+                    json_file.truncate()
+                return
+
       
     def user_known(self, username):
         for usr in self.data['users']:
@@ -77,32 +83,46 @@ class usr_data:
             json.dump(self.data, json_file, indent=4)
     
     def change_info(self, username, send_info):
-        user_info = self.get_user_info(username)
-        if send_info != user_info[2]:
+        info = self.get_user_info(username)
+        if info is None:
+            return
+        idx, u = info
+
+        if send_info != u.get('send-info'):
             with open('data.json', 'r+') as json_file:
-                self.data['users'][user_info[0]]['send-info'] = send_info
+                self.data['users'][idx]['send-info'] = send_info
+                json_file.seek(0)
                 json.dump(self.data, json_file, indent=4)
-        else:
-            return '\nno data changed\n'
+                json_file.truncate()
     
     def change_data(self, username, send_data):
-        user_info = self.get_user_info(username)
-        if send_data != user_info[3]:
+        info = self.get_user_info(username)
+        if info is None:
+            return
+        idx, u = info
+
+
+        if send_data != u.get('send-data'):
             with open('data.json', 'r+') as json_file:
-                self.data['users'][user_info[0]]['send-data'] = send_data
+                self.data['users'][idx]['send-data'] = send_data
+                json_file.seek(0)
                 json.dump(self.data, json_file, indent=4)
-        else:
-            return '\nno data changed\n'
+                json_file.truncate()
     
     def change_time(self, username, send_time_h, send_time_m):
-        user_info = self.get_user_info(username)
-        if (send_time_h != user_info[4]) or (send_time_m != user_info[5]):
+        info = self.get_user_info(username)
+        if info is None:
+            return
+        idx, u = info
+
+        if (send_time_h != u.get('send-time-h')) or (send_time_m != u.get('send-time-m')):
             with open('data.json', 'r+') as json_file:
-                self.data['users'][user_info[0]]['send-time-h'] = send_time_h
-                self.data['users'][user_info[0]]['send-time-m'] = send_time_m
+                self.data['users'][idx]['send-time-h'] = send_time_h
+                self.data['users'][idx]['send-time-m'] = send_time_m
+                json_file.seek(0)
                 json.dump(self.data, json_file, indent=4)
-        else:
-            return '\nno data changed\n'
+                json_file.truncate()
+                
 
         
 

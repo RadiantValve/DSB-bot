@@ -1,10 +1,11 @@
 from json_handler import usr_data as js
 from dsb import DSBPlanExtractor
 from dotenv import load_dotenv
-from discord.ext import tasks
 from datetime import datetime
+from ui import open_menu
 import discord
 import logging
+import asyncio
 import time
 import os
 
@@ -61,7 +62,7 @@ class MyClient(discord.Client):
             print(f'{i}\n{i.member_count}')
             for o in i.members:
                 print(o)
-        self.restart_auto_send_loop()
+        self.loop.create_task(self.auto_send_loop_task())
         #self.set_send_times()
         print("init complete")
     
@@ -93,38 +94,19 @@ class MyClient(discord.Client):
         else:
             await user.send("No images found in the 'images' folder.")
     
-    async def restart_auto_send_loop(self):
-        if self.auto_send_loop == False:
-            self.auto_send_loop = True
-            self.send_to_users_enqueue()
-        elif self.auto_send_loop == True:
-            self.auto_send_loop = False
-            time.sleep(70)
-            self.auto_send_loop = True
-            self.send_to_users_enqueue()
-
-    async def send_to_users_enqueue(self): #enques users to get messages sent
-        while self.auto_send_loop:
+    async def auto_send_loop_task(self):
+        await self.wait_until_ready()
+        while not self.is_closed():
             now = datetime.now()
-            queue = []
+
             for u in users.get_users_sendinfo():
                 h, m = users.get_user_time(u)
                 if h == now.hour and m == now.minute:
-                    queue.append(u)
-            self.send_to_users_dequeue(queue)
-            time.sleep(60)
-    
-    async def send_to_users_dequeue(self, queue):
-        while queue != []:
-            for i in queue:
-                data = users.get_user_data(i)
-                self.send_dsb_img(i, data)
-                if extractor.backup():
-                    print("backup sucessfull")
-                else:
-                    print("backup failed...")
-                queue.remove[i]
+                    data = users.get_user_data(u)
+                    await self.send_dsb_img(u, data)
+                    extractor.backup()
 
+            await asyncio.sleep(60)
 
 
     @client.event
@@ -157,9 +139,9 @@ class MyClient(discord.Client):
         if message.content == ('!hello'):
             await message.channel.send('Hello! How can I assist you today?')
         
-        if message.content == ('!menu'):
-            view = MenuView()
-            await message.channel.send(content=view.pages[0], view=view)
+        if message.content == "!menu":
+            await open_menu(message, users)
+            return
         
         if message.content == ('-help') or message.content == ('-h'):
             str1 = 'Available special commands: '
