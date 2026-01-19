@@ -162,6 +162,9 @@ class DSBPlanExtractor:
 
 
     def convert2png(self):
+        backup_folder = "backup"
+        if not os.path.exists(backup_folder):
+            os.makedirs(backup_folder)
         print('-'*50)
         for root, dirs, files in os.walk(os.getcwd()):
             for file in files:
@@ -202,3 +205,4 @@ class DSBPlanExtractor:
 #    extractor.fetch_and_extract(c)
 #extractor.convert2png()
 #extractor.cleanse()
+#extractor.get_all()

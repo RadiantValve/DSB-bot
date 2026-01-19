@@ -3,7 +3,6 @@ from dsb import DSBPlanExtractor
 from dotenv import load_dotenv
 from discord.ext import tasks
 from datetime import datetime
-import datetime
 import discord
 import logging
 import time
@@ -51,7 +50,8 @@ def log(message):
 
 class MyClient(discord.Client):
     logging = True
-    send_times = datetime.time(hour=7, minute=0)
+    send_times = [(7, 0)]
+    auto_send_loop = True
     async def on_ready(self):
         log(f'Logged in as {self.user} (ID: {self.user.id})')
         log('------')
@@ -61,15 +61,17 @@ class MyClient(discord.Client):
             print(f'{i}\n{i.member_count}')
             for o in i.members:
                 print(o)
-        self.set_send_times()
-        await self.send_to_users()
+        self.restart_auto_send_loop()
+        #self.set_send_times()
+        print("init complete")
     
-    def set_send_times(self):
-        #send_times = [datetime.time(hour=7, minute=45), datetime.time(hour=9, minute=30)]
-        self.send_times =  []
-        for u in users.get_users_sendinfo():
-            h, m = users.get_user_time(u)
-            self.send_times.append((h, m))
+    #def set_send_times(self):
+    #    #send_times = [(7, 45), (9, 30)]
+    #    self.send_times =  []
+    #    for u in users.get_users_sendinfo():
+    #        h, m = users.get_user_time(u)
+    #        self.send_times.append((h, m))
+    #    self.restart_auto_send_loop()
     
     async def send_dsb_img(self, u, data):
         file_list = []
@@ -91,20 +93,39 @@ class MyClient(discord.Client):
         else:
             await user.send("No images found in the 'images' folder.")
     
-    #set_send_times()
-    async def send_to_users(self):
-        for u in users.get_users_sendinfo():
-            for t in self.send_times:
-                h, m = users.get_user_time(u)
-                if (datetime.time(hour=h) == t[0]) and (datetime.time(minute=m) == t[1]):
-                    data = users.get_user_data(u)
-                    self.send_dsb_img(u, data)
-                    if extractor.backup():
-                        print("backup sucessfull")
-                    else:
-                        print("backup failed...")
+    async def restart_auto_send_loop(self):
+        if self.auto_send_loop == False:
+            self.auto_send_loop = True
+            self.send_to_users_enqueue()
+        elif self.auto_send_loop == True:
+            self.auto_send_loop = False
+            time.sleep(70)
+            self.auto_send_loop = True
+            self.send_to_users_enqueue()
 
-        print(1)
+    async def send_to_users_enqueue(self): #enques users to get messages sent
+        while self.auto_send_loop:
+            now = datetime.now()
+            queue = []
+            for u in users.get_users_sendinfo():
+                h, m = users.get_user_time(u)
+                if h == now.hour and m == now.minute:
+                    queue.append(u)
+            self.send_to_users_dequeue(queue)
+            time.sleep(60)
+    
+    async def send_to_users_dequeue(self, queue):
+        while queue != []:
+            for i in queue:
+                data = users.get_user_data(i)
+                self.send_dsb_img(i, data)
+                if extractor.backup():
+                    print("backup sucessfull")
+                else:
+                    print("backup failed...")
+                queue.remove[i]
+
+
 
     @client.event
     async def on_message(self, message):
