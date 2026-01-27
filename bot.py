@@ -62,7 +62,7 @@ class MyClient(discord.Client):
             print(f'{i}\n{i.member_count}')
             for o in i.members:
                 print(o)
-        self.loop.create_task(self.auto_send_loop_task())
+        self.auto_send_task = self.loop.create_task(self.auto_send_loop_task())
         #self.set_send_times()
         print("init complete")
     
@@ -94,17 +94,24 @@ class MyClient(discord.Client):
         else:
             await user.send("No images found in the 'images' folder.")
     
+    def restart_loop(self):
+        if self.auto_send_task and not self.auto_send_task.done():
+            self.auto_send_task.cancel()
+    
+    async def send_and_backup(self, u, data):
+        await self.send_dsb_img(u, data)
+        extractor.backup()
+
     async def auto_send_loop_task(self):
         await self.wait_until_ready()
-        while not self.is_closed():
+        while not self.is_closed(): 
             now = datetime.now()
 
             for u in users.get_users_sendinfo():
                 h, m = users.get_user_time(u)
                 if h == now.hour and m == now.minute:
                     data = users.get_user_data(u)
-                    await self.send_dsb_img(u, data)
-                    extractor.backup()
+                    self.loop.create_task(self.send_and_backup(u, data))
 
             await asyncio.sleep(60)
 
