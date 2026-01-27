@@ -122,8 +122,8 @@ class MyClient(discord.Client):
         print(message.author)
         print(message.content)
 
-        commands = ['!h', '!help', '!hello', '!menu', 'get', 'backup']
-        special_commands = ['-h', '-help', '-log', '-logstatus', '-sendlog', '-deluser']
+        commands = ['!h', '!help', '!hello', '!menu', '!get']
+        special_commands = ['-h', '-help', '-log', '-logstatus', '-sendlog', '-deluser', '-get', '-backup']
             
         if self.logging:
             log(f'Message from {message.author}: {message.content}')
@@ -146,9 +146,14 @@ class MyClient(discord.Client):
         if message.content == ('!hello'):
             await message.channel.send('Hello! How can I assist you today?')
         
-        if message.content == "!menu":
+        if message.content == ('!menu'):
             await open_menu(message, users)
             return
+        
+        if message.content == ('!get'):
+            await message.channel.send("Rufe Inhalte ab...")
+            data = users.get_user_data(message.author.id)
+            self.send_and_backup(message.author.id, data)
         
         if message.content == ('-help') or message.content == ('-h'):
             str1 = 'Available special commands: '
@@ -179,7 +184,7 @@ class MyClient(discord.Client):
             users.del_user(message.author.id)
             await message.channel.send(f'User '+str(message.author.id)+' deleted!')
         
-        if message.content == ("get"):
+        if message.content == ("-get"):
             file_list = []
             await message.channel.send("ok")
             extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
@@ -204,7 +209,7 @@ class MyClient(discord.Client):
                 await message.channel.send("No images found in the 'images' folder.")
             return
         
-        if message.content == ("backup"):
+        if message.content == ("-backup"):
             extractor = DSBPlanExtractor(DSB_ID, DSB_USER)
             await message.channel.send("Starting backup...")
             if extractor.backup():
